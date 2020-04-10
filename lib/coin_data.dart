@@ -31,17 +31,17 @@ const List<String> cryptoList = [
   'LTC',
 ];
 
-const apiCoinUrl = 'https://rest.coinapi.io/v1/exchangerate/BTC/';
+const apiCoinUrl = 'https://rest.coinapi.io/v1/exchangerate/';
 const apiKey = 'D8640CA3-CB50-438E-8A0A-2379168564A4';
 
 class CoinData {
-  Future<dynamic> getCoinData(String currency) async {
-    http.Response response = await http.get('$apiCoinUrl$currency?apiKey=$apiKey');
-    if (response.statusCode == 200) {
+  Future<Map<String, double>> getCoinData(String currency) async {
+    Map<String, double> rates = Map();
+    for (String crypto in cryptoList) {
+      http.Response response = await http.get('$apiCoinUrl$crypto/$currency?apiKey=$apiKey');
       print(jsonDecode(response.body));
-      return jsonDecode(response.body);
-    } else {
-      return 'Request error';
+      rates.putIfAbsent(crypto, () => double.parse(jsonDecode(response.body)['rate'].toString()));
     }
+    return rates;
   }
 }

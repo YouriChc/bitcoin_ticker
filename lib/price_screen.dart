@@ -12,7 +12,7 @@ class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrecncy = 'EUR';
   int selectedIndexPicker = 4;
   CoinData coinData = CoinData();
-  double rate;
+  Map<String, double> rates = Map();
 
   DropdownButton<String> getDropDownButton() {
     List<DropdownMenuItem<String>> list = [];
@@ -29,6 +29,7 @@ class _PriceScreenState extends State<PriceScreen> {
       onChanged: (value) {
         setState(() {
           selectedCurrecncy = value;
+          getRate();
         });
       },
     );
@@ -45,24 +46,53 @@ class _PriceScreenState extends State<PriceScreen> {
       itemExtent: 32,
       onSelectedItemChanged: (selectedIndex) {
         setState(() {
-          selectedIndexPicker = selectedIndex;
+          selectedCurrecncy = currenciesList[selectedIndex];
         });
       },
       children: list,
     );
   }
 
+  List<Widget> getCurrecnyContainer() {
+    List<Widget> widgets = [];
+    for (String crypto in cryptoList) {
+      widgets.add(Padding(
+        padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
+        child: Card(
+          color: Colors.lightBlueAccent,
+          elevation: 5.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+            child: Text(
+              '1 $crypto = ${rates[crypto] == null ? '?' : rates[crypto].toStringAsFixed(2)} $selectedCurrecncy',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20.0,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ));
+    }
+    return widgets;
+  }
+
+  void getRate() async {
+    rates.clear();
+    var ratesResponse = await coinData.getCoinData(selectedCurrecncy);
+    setState(() {
+      rates = ratesResponse;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     getRate();
-  }
-
-  void getRate() async {
-    dynamic data = await coinData.getCoinData(selectedCurrecncy);
-    setState(() {
-      rate = data['rate'];
-    });
   }
 
   @override
@@ -75,26 +105,9 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = ${rate == null ? '?' : rate.toStringAsFixed(2)} $selectedCurrecncy',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: getCurrecnyContainer(),
           ),
           Container(
             height: 150.0,
